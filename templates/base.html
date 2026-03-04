@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood & Organ Donation System</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">
+                <i class="fas fa-heartbeat"></i> LifeLink
+            </a>
+            <ul class="nav-links">
+                <li><a href="/templates/index.html">Home</a></li>
+                <li><a href="/templates/dashboard.html">Dashboard</a></li>
+                <li><a href="/templates/hospital.html">Hospital Panel</a></li>
+                <li><a href="/templates/admin.html">Admin Panel</a></li>
+                <li><a href="/templates/logout.html">Logout</a></li>
+                <li><a href="/templates/login.html">Login</a></li>
+                <li><a href="/templates/register.html">Register</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="container">
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+    </div>
+    <!-- Main Content -->
+    <main>
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Minus fugiat recusandae, 
+            aspernatur et delectus laborum ut nostrum aliquid eum, 
+            repellendus in enim incidunt blanditiis esse libero voluptas vitae numquam quas.</p>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>About LifeLink</h3>
+                    <p>Connecting donors with recipients to save lives through blood and organ donation.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">How to Donate</a></li>
+                        <li><a href="#">FAQs</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact Info</h3>
+                    <ul>
+                        <li><i class="fas fa-phone"></i> Emergency: 1-800-DONATE</li>
+                        <li><i class="fas fa-envelope"></i> info@lifelink.org</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 123 Healthcare Ave, Medical City</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 LifeLink Blood & Organ Donation System. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

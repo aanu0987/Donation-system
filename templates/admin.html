@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    
+</body>
+</html>
+<div class="container" style="margin: 2rem auto;">
+    <!-- Admin Header -->
+    <div class="card" style="background: linear-gradient(135deg, #2c3e50, #34495e); color: white;">
+        <div class="card-body">
+            <h1>Admin Dashboard</h1>
+            <p>Welcome back, {{ user.full_name }}. Here's your system overview and management panel.</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card" style="background: linear-gradient(135deg, #3498db, #2980b9);">
+            <div class="stat-value">{{ stats.total_users if stats else 0 }}</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card blood">
+            <div class="stat-value">{{ stats.blood_donors if stats else 0 }}</div>
+            <div class="stat-label">Blood Donors</div>
+        </div>
+        <div class="stat-card organ">
+            <div class="stat-value">{{ stats.organ_donors if stats else 0 }}</div>
+            <div class="stat-label">Organ Donors</div>
+        </div>
+        <div class="stat-card hospital">
+            <div class="stat-value">{{ stats.hospitals if stats else 0 }}</div>
+            <div class="stat-label">Hospitals</div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #f39c12, #e67e22);">
+            <div class="stat-value">{{ stats.recipients if stats else 0 }}</div>
+            <div class="stat-label">Recipients</div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #2ecc71, #27ae60);">
+            <div class="stat-value">{{ stats.donations if stats else 0 }}</div>
+            <div class="stat-label">Total Donations</div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Row -->
+    <div class="row">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Quick Actions</h3>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <button class="btn btn-primary" onclick="showAddUserModal()">
+                        <i class="fas fa-user-plus"></i> Add New User
+                    </button>
+                    <button class="btn btn-success" onclick="generateReport()">
+                        <i class="fas fa-file-alt"></i> Generate Report
+                    </button>
+                    <button class="btn btn-info" onclick="backupDatabase()">
+                        <i class="fas fa-database"></i> Backup Database
+                    </button>
+                    <button class="btn btn-warning" onclick="systemSettings()">
+                        <i class="fas fa-cog"></i> System Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Health -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">System Health</h3>
+            </div>
+            <div class="card-body">
+                <div style="margin-bottom: 1rem;">
+                    <p><i class="fas fa-circle text-success"></i> Database: <strong>Connected</strong></p>
+                    <p><i class="fas fa-circle text-success"></i> Server: <strong>Running</strong></p>
+                    <p><i class="fas fa-circle text-warning"></i> Storage: <strong>65% Used</strong></p>
+                    <p><i class="fas fa-circle text-success"></i> API: <strong>Operational</strong></p>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar" style="width: 65%;">65%</div>
+                </div>
+                <p class="text-muted" style="margin-top: 0.5rem;">Last backup: Today, 02:30 AM</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management Tabs -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">User Management</h3>
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="text" class="form-control" placeholder="Search users..." id="userSearch" style="width: 300px;">
+                <select class="form-control" id="userTypeFilter" style="width: 150px;" onchange="filterUsers()">
+                    <option value="all">All Users</option>
+                    <option value="donor">Donors</option>
+                    <option value="recipient">Recipients</option>
+                    <option value="hospital">Hospitals</option>
+                    <option value="admin">Admins</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- User Tabs -->
+            <ul class="nav-links" style="margin-bottom: 1rem; border-bottom: 2px solid #eee;">
+                <li><a href="#" onclick="showUserTab('all')" class="active" id="tab-all">All</a></li>
+                <li><a href="#" onclick="showUserTab('pending')" id="tab-pending">Pending Verification</a></li>
+                <li><a href="#" onclick="showUserTab('verified')" id="tab-verified">Verified</a></li>
+                <li><a href="#" onclick="showUserTab('blocked')" id="tab-blocked">Blocked</a></li>
+            </ul>
+
+            <!-- Users Table -->
+            <div class="table-responsive">
+                <table class="table" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>User Type</th>
+                            <th>City</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for system_user in users %}
+                        <tr data-user-type="{{ system_user.user_type }}" data-status="{% if system_user.is_verified %}verified{% else %}pending{% endif %}">
+                            <td>#{{ system_user._id|string|truncate(6, True, '') }}</td>
+                            <td>{{ system_user.full_name }}</td>
+                            <td>{{ system_user.email }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if system_user.user_type == 'donor' %}badge-danger
+                                    {% elif system_user.user_type == 'recipient' %}badge-warning
+                                    {% elif system_user.user_type == 'hospital' %}badge-success
+                                    {% elif system_user.user_type == 'admin' %}badge-info
+                                    {% endif %}">
+                                    {{ system_user.user_type|upper }}
+                                </span>
+                            </td>
+                            <td>{{ system_user.city }}</td>
+                            <td>
+                                {% if system_user.is_verified %}
+                                    <span class="badge badge-success">Verified</span>
+                                {% else %}
+                                    <span class="badge badge-warning">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ system_user.created_at.strftime('%Y-%m-%d') if system_user.created_at else 'N/A' }}</td>
+                            <td>
+                                <div style="display: flex; gap: 0.25rem;">
+                                    <button class="btn btn-sm btn-primary" onclick="viewUser('{{ system_user._id }}')" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-success" onclick="editUser('{{ system_user._id }}')" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    {% if not system_user.is_verified %}
+                                    <button class="btn btn-sm btn-info" onclick="verifyUser('{{ system_user._id }}')" title="Verify">
+                                        <i class="fas fa-check-circle"></i>
+                                    </button>
+                                    {% endif %}
+                                    <button class="btn btn-sm btn-danger" onclick="deleteUser('{{ system_user._id }}')" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                <p>Showing 1-{{ users|length }} of {{ users|length }} users</p>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-outline btn-sm" disabled>Previous</button>
+                    <button class="btn btn-primary btn-sm">1</button>
+                    <button class="btn btn-outline btn-sm">2</button>
+                    <button class="btn btn-outline btn-sm">3</button>
+                    <button class="btn btn-outline btn-sm">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Donation Analytics -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Donation Analytics</h3>
+            <div>
+                <select class="form-control" style="width: 150px;" onchange="changeChartPeriod(this.value)">
+                    <option value="week">Last Week</option>
+                    <option value="month" selected>Last Month</option>
+                    <option value="year">Last Year</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+                <!-- Chart -->
+                <div>
+                    <canvas id="donationChart" style="width: 100%; height: 300px;"></canvas>
+                </div>
+                
+                <!-- Summary -->
+                <div>
+                    <h4>Summary</h4>
+                    <div style="margin: 1rem 0;">
+                        <p><strong>Blood Donations:</strong> 245</p>
+                        <p><strong>Organ Donations:</strong> 32</p>
+                        <p><strong>Emergency Requests:</strong> 15</p>
+                        <p><strong>Success Rate:</strong> 94%</p>
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <h5>Top Blood Groups</h5>
+                        <div>
+                            <p>O+ <span class="badge badge-success">45%</span></p>
+                            <p>A+ <span class="badge badge-success">30%</span></p>
+                            <p>B+ <span class="badge badge-success">15%</span></p>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="exportAnalytics()">
+                        <i class="fas fa-download"></i> Export Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities & Logs -->
+    <div class="row">
+        <!-- Recent Donations -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Recent Donations</h3>
+                <a href="#" onclick="viewAllDonations()">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Donor</th>
+                                <th>Type</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentDonations">
+                            <tr>
+                                <td colspan="4" style="text-align: center;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Logs -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">System Logs</h3>
+                <a href="#" onclick="viewAllLogs()">View All</a>
+            </div>
+            <div class="card-body">
+                <div style="max-height: 300px; overflow-y: auto;">
+                    <div class="log-entry" style="padding: 0.5rem; border-bottom: 1px solid #eee;">
+                        <small class="text-muted">10:30 AM</small>
+                        <p>User John Doe registered as donor</p>
+                    </div>
+                    <div class="log-entry" style="padding: 0.5rem; border-bottom: 1px solid #eee;">
+                        <small class="text-muted">09:45 AM</small>
+                        <p>Hospital City General verified</p>
+                    </div>
+                    <div class="log-entry" style="padding: 0.5rem; border-bottom: 1px solid #eee;">
+                        <small class="text-muted">09:15 AM</small>
+                        <p>Blood donation completed #2345</p>
+                    </div>
+                    <div class="log-entry" style="padding: 0.5rem; border-bottom: 1px solid #eee;">
+                        <small class="text-muted">08:30 AM</small>
+                        <p>Emergency request for O- blood</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hospital Verification Requests -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Pending Hospital Verifications</h3>
+            <span class="badge badge-danger">{{ pending_hospitals|length }}</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Hospital Name</th>
+                            <th>License Number</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Registered</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hospital in pending_hospitals %}
+                        <tr>
+                            <td>{{ hospital.hospital_name }}</td>
+                            <td>{{ hospital.license_number }}</td>
+                            <td>{{ hospital.email }}</td>
+                            <td>{{ hospital.phone }}</td>
+                            <td>{{ hospital.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <button class="btn btn-success btn-sm" onclick="verifyHospital('{{ hospital._id }}')">Verify</button>
+                                <button class="btn btn-danger btn-sm" onclick="rejectHospital('{{ hospital._id }}')">Reject</button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" style="text-align: center;">No pending hospital verifications</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal" id="addUserModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Add New User</h3>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="addUserForm">
+                <div class="form-group">
+                    <label>User Type</label>
+                    <select class="form-control" name="user_type" required>
+                        <option value="donor">Donor</option>
+                        <option value="recipient">Recipient</option>
+                        <option value="hospital">Hospital</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" class="form-control" name="full_name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" class="form-control" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" class="form-control" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" class="form-control" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" class="form-control" name="phone" required>
+                </div>
+                <div class="form-group">
+                    <label>City</label>
+                    <input type="text" class="form-control" name="city" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Add User</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View User Modal -->
+<div class="modal" id="viewUserModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>User Details</h3>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body" id="userDetails">
+            <!-- User details will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Initialize chart
+document.addEventListener('DOMContentLoaded', function() {
+    initChart();
+    loadRecentDonations();
+    setupUserSearch();
+});
+
+function initChart() {
+    const ctx = document.getElementById('donationChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            datasets: [{
+                label: 'Blood Donations',
+                data: [65, 72, 68, 85],
+                borderColor: '#e74c3c',
+                backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Organ Donations',
+                data: [8, 12, 9, 15],
+                borderColor: '#3498db',
+                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function loadRecentDonations() {
+    // Simulate loading recent donations
+    const donations = [
+        { donor: 'John Smith', type: 'Blood', date: '2024-01-15', status: 'Completed' },
+        { donor: 'Sarah Johnson', type: 'Organ', date: '2024-01-14', status: 'Completed' },
+        { donor: 'Mike Brown', type: 'Blood', date: '2024-01-14', status: 'Pending' }
+    ];
+    
+    let html = '';
+    donations.forEach(d => {
+        html += `
+            <tr>
+                <td>${d.donor}</td>
+                <td><span class="badge badge-${d.type === 'Blood' ? 'danger' : 'success'}">${d.type}</span></td>
+                <td>${d.date}</td>
+                <td><span class="badge badge-${d.status === 'Completed' ? 'success' : 'warning'}">${d.status}</span></td>
+            </tr>
+        `;
+    });
+    document.getElementById('recentDonations').innerHTML = html;
+}
+
+function setupUserSearch() {
+    document.getElementById('userSearch').addEventListener('keyup', filterUsers);
+}
+
+function filterUsers() {
+    const searchTerm = document.getElementById('userSearch').value.toLowerCase();
+    const typeFilter = document.getElementById('userTypeFilter').value;
+    const rows = document.querySelectorAll('#usersTable tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const userType = row.dataset.userType;
+        
+        let typeMatch = typeFilter === 'all' || userType === typeFilter;
+        let searchMatch = searchTerm === '' || text.includes(searchTerm);
+        
+        row.style.display = typeMatch && searchMatch ? '' : 'none';
+    });
+}
+
+function showUserTab(tab) {
+    // Update active tab
+    document.querySelectorAll('[id^="tab-"]').forEach(t => t.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    
+    // Filter rows
+    const rows = document.querySelectorAll('#usersTable tbody tr');
+    rows.forEach(row => {
+        if (tab === 'all') {
+            row.style.display = '';
+        } else {
+            const status = row.dataset.status;
+            row.style.display = status === tab ? '' : 'none';
+        }
+    });
+}
+
+function showAddUserModal() {
+    document.getElementById('addUserModal').classList.add('active');
+}
+
+function viewUser(userId) {
+    // Fetch user details and show in modal
+    fetch(`/api/user/${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            const details = document.getElementById('userDetails');
+            details.innerHTML = `
+                <p><strong>ID:</strong> ${userId}</p>
+                <p><strong>Name:</strong> ${data.full_name}</p>
+                <p><strong>Email:</strong> ${data.email}</p>
+                <p><strong>Type:</strong> ${data.user_type}</p>
+                <p><strong>City:</strong> ${data.city}</p>
+                <p><strong>Joined:</strong> ${data.created_at}</p>
+            `;
+            document.getElementById('viewUserModal').classList.add('active');
+        });
+}
+
+function editUser(userId) {
+    alert(`Edit user ${userId} - Feature coming soon!`);
+}
+
+function verifyUser(userId) {
+    if (confirm('Verify this user?')) {
+        fetch(`/api/verify-user/${userId}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                alert('User verified successfully!');
+                location.reload();
+            });
+    }
+}
+
+function deleteUser(userId) {
+    if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+        fetch(`/api/delete-user/${userId}`, { method: 'DELETE' })
+            .then(response => response.json())
+            .then(data => {
+                alert('User deleted successfully!');
+                location.reload();
+            });
+    }
+}
+
+function verifyHospital(hospitalId) {
+    if (confirm('Verify this hospital?')) {
+        fetch(`/api/verify-hospital/${hospitalId}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                alert('Hospital verified successfully!');
+                location.reload();
+            });
+    }
+}
+
+function rejectHospital(hospitalId) {
+    if (confirm('Reject this hospital verification?')) {
+        fetch(`/api/reject-hospital/${hospitalId}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                alert('Hospital rejected');
+                location.reload();
+            });
+    }
+}
+
+function generateReport() {
+    const format = prompt('Enter report format (pdf/excel):', 'pdf');
+    if (format) {
+        window.location.href = `/api/generate-report?format=${format}`;
+    }
+}
+
+function backupDatabase() {
+    if (confirm('Create database backup?')) {
+        fetch('/api/backup-database', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                alert('Backup created successfully!');
+            });
+    }
+}
+
+function systemSettings() {
+    alert('System settings - Feature coming soon!');
+}
+
+function changeChartPeriod(period) {
+    // Update chart data based on period
+    alert(`Loading ${period} data...`);
+}
+
+function exportAnalytics() {
+    window.location.href = '/api/export-analytics';
+}
+
+function viewAllDonations() {
+    alert('View all donations - Feature coming soon!');
+}
+
+function viewAllLogs() {
+    alert('View all logs - Feature coming soon!');
+}
+
+// Close modals
+document.querySelectorAll('.close').forEach(btn => {
+    btn.addEventListener('click', function() {
+        this.closest('.modal').classList.remove('active');
+    });
+});
+
+// Add user form submission
+document.getElementById('addUserForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData);
+    
+    fetch('/api/add-user', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('User added successfully!');
+            location.reload();
+        } else {
+            alert('Error adding user: ' + data.message);
+        }
+    });
+});
+
+// Click outside modal to close
+window.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal')) {
+        e.target.classList.remove('active');
+    }
+});
+</script>
+
+<style>
+/* Admin specific styles */
+.log-entry:hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+.nav-links a {
+    padding: 0.5rem 1rem;
+    border-bottom: 2px solid transparent;
+    margin-right: 1rem;
+}
+
+.nav-links a.active {
+    border-bottom-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.stat-card {
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Table row actions */
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    #userSearch {
+        width: 100% !important;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    
+</body>
+</html>
+<div class="container" style="margin: 2rem auto;">
+    <!-- Emergency Banner -->
+    <div class="emergency-banner">
+        <i class="fas fa-exclamation-triangle"></i> 
+        EMERGENCY: Your request is marked as urgent. We are prioritizing your case.
+    </div>
+
+    <!-- Recipient Profile -->
+    <div class="row">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Recipient Profile</h3>
+                <span class="badge {% if recipient and recipient.urgency_level == 'Emergency' %}badge-danger{% elif recipient and recipient.urgency_level == 'High' %}badge-warning{% else %}badge-success{% endif %}">
+                    {{ recipient.urgency_level if recipient else 'Normal' }} Priority
+                </span>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                    <div>
+                        <p><strong>Name:</strong> {{ user.full_name if user else 'N/A' }}</p>
+                        <p><strong>Blood Group Needed:</strong> {{ recipient.required_blood_group if recipient else 'Not specified' }}</p>
+                        <p><strong>Organ Needed:</strong> {{ recipient.required_organ if recipient else 'Not specified' }}</p>
+                    </div>
+                    <div>
+                        <p><strong>Request Date:</strong> {{ recipient.request_date.strftime('%Y-%m-%d') if recipient and recipient.request_date else 'N/A' }}</p>
+                        <p><strong>Status:</strong> <span class="badge badge-info">{{ recipient.status if recipient else 'Pending' }}</span></p>
+                        <p><strong>Medical Reports:</strong> <a href="#" onclick="viewReports(); return false;">View</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Request Status Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Request Status</h3>
+            </div>
+            <div class="card-body">
+                <div class="progress" style="height: 20px; margin-bottom: 1rem;">
+                    <div class="progress-bar" style="width: 60%;">60%</div>
+                </div>
+                <p><i class="fas fa-check-circle text-success"></i> Registration Complete</p>
+                <p><i class="fas fa-spinner text-warning"></i> Searching for Matches</p>
+                <p><i class="fas fa-clock text-muted"></i> Hospital Coordination</p>
+                <p><i class="fas fa-clock text-muted"></i> Donation Scheduled</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Matching Donors -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Potential Donor Matches</h3>
+            <button class="btn btn-primary btn-sm" onclick="refreshMatches()">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Donor Name</th>
+                            <th>Blood Group</th>
+                            <th>Organ</th>
+                            <th>Location</th>
+                            <th>Match Score</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matchesTable">
+                            <tr>
+                                <td>{{ match.donor_name if match.donor_name else 'N/A' }}</td>
+                                <td>{{ match.blood_group or 'N/A' }}</td>
+                                <td>{{ match.organ_type or 'N/A' }}</td>
+                                <td>{{ match.donor_city if match.donor_city else 'N/A' }}</td>
+                                <td>
+                                    <div class="progress">
+                                        <div class="progress-bar" data-width="{{ match.match_score|default(0) }}" style="--width: {{ match.match_score|default(0) }}%;">{{ match.match_score|default(0) }}%</div>                                    
+                                    </div>
+                                </td>
+                                <td>
+                                    <button class="btn btn-success btn-sm" onclick="acceptMatch('{{ match._id }}')">Accept</button>                                    
+                                    <button class="btn btn-danger btn-sm" onclick="declineMatch('{{ match._id }}')">Decline</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="6" style="text-align: center;">No matches found yet</td>
+                            </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request History -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Request History</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Details</th>
+                            <th>Status</th>
+                            <th>Hospital</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTable">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Medical Reports Section -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Medical Reports</h3>
+            <button class="btn btn-primary btn-sm" onclick="uploadReport()">
+                <i class="fas fa-upload"></i> Upload New
+            </button>
+        </div>
+        <div class="card-body">
+            <div id="reportsList">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadHistory();
+    loadReports();
+    startMatchPolling();
+});
+
+function loadHistory() {
+    const history = [
+        { date: '2024-01-10', type: 'Blood', details: 'A+ Blood Request', status: 'Fulfilled', hospital: 'City Hospital' },
+        { date: '2024-01-05', type: 'Organ', details: 'Kidney Match', status: 'Pending', hospital: 'Medical Center' }
+    ];
+    
+    let html = '';
+    history.forEach(function(item) {
+        html += '<tr>' +
+            '<td>' + item.date + '</td>' +
+            '<td><span class="badge ' + (item.type === 'Blood' ? 'badge-danger' : 'badge-success') + '">' + item.type + '</span></td>' +
+            '<td>' + item.details + '</td>' +
+            '<td><span class="badge ' + (item.status === 'Fulfilled' ? 'badge-success' : 'badge-warning') + '">' + item.status + '</span></td>' +
+            '<td>' + item.hospital + '</td>' +
+        '</tr>';
+    });
+    document.getElementById('historyTable').innerHTML = html;
+}
+
+function loadReports() {
+    const reports = [
+        { name: 'Blood Test Report', date: '2024-01-01', status: 'Verified' },
+        { name: 'Medical History', date: '2023-12-15', status: 'Pending' }
+    ];
+    
+    let html = '<div class="row">';
+    reports.forEach(function(report) {
+        html += '<div class="card" style="margin: 0.5rem; padding: 1rem;">' +
+            '<h4>' + report.name + '</h4>' +
+            '<p>Uploaded: ' + report.date + '</p>' +
+            '<p>Status: <span class="badge ' + (report.status === 'Verified' ? 'badge-success' : 'badge-warning') + '">' + report.status + '</span></p>' +
+            '<button class="btn btn-primary btn-sm" onclick="viewReport(\'' + report.name + '\')">View</button>' +
+        '</div>';
+    });
+    html += '</div>';
+    document.getElementById('reportsList').innerHTML = html;
+}
+
+function startMatchPolling() {
+    setInterval(refreshMatches, 30000); // Refresh every 30 seconds
+}
+
+function refreshMatches() {
+    const recipientId = '{{ recipient._id if recipient else "" }}';
+    if (!recipientId) return;
+    
+    fetch('/api/matches/' + recipientId)
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            console.log('Matches refreshed:', data);
+            // Update matches table logic here
+        })
+        .catch(function(error) { console.error('Error refreshing matches:', error); });
+}
+
+function acceptMatch(matchId) {
+    if (confirm('Accept this donor match?')) {
+        fetch('/api/accept-match', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({match_id: matchId})
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            alert('Match accepted! Hospital will contact you soon.');
+            refreshMatches();
+        })
+        .catch(function(error) {
+            alert('Error accepting match. Please try again.');
+            console.error('Error:', error);
+        });
+    }
+}
+
+function declineMatch(matchId) {
+    if (confirm('Decline this donor match?')) {
+        fetch('/api/decline-match', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({match_id: matchId})
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            alert('Match declined');
+            refreshMatches();
+        })
+        .catch(function(error) {
+            alert('Error declining match. Please try again.');
+            console.error('Error:', error);
+        });
+    }
+}
+
+function viewReports() {
+    alert('Medical reports view coming soon!');
+}
+
+function uploadReport() {
+    alert('Upload report functionality coming soon!');
+}
+
+function viewReport(reportName) {
+    alert('Viewing ' + reportName);
+}
+
+// Urgency level update
+function updateUrgencyLevel(level) {
+    const recipientId = '{{ recipient._id if recipient else "" }}';
+    if (!recipientId) return;
+    
+    fetch('/api/update-urgency', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            recipient_id: recipientId,
+            urgency_level: level
+        })
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data.success) {
+            location.reload();
+        }
+    })
+    .catch(function(error) { console.error('Error updating urgency:', error); });
+}
+</script>

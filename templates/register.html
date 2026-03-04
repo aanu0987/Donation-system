@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register-Blood & Organ Donation System</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container" style="max-width: 600px; margin: 2rem auto;">
+        <div class="card">
+            <div class="card-header">
+            <h2 class="card-title">Register</h2>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="/register" id="registrationForm">
+                <!-- User Type Selection -->
+                <div class="form-group">
+                    <label>I want to register as:</label>
+                    <select class="form-control" name="user_type" id="userType" required>
+                        <option value="">Select Type</option>
+                        <option value="donor">Donor</option>
+                        <option value="recipient">Recipient</option>
+                        <option value="hospital">Hospital</option>
+                    </select>
+                </div>
+
+                <!-- Basic Information -->
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" class="form-control" name="full_name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" class="form-control" name="username" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" class="form-control" name="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" class="form-control" name="password" required minlength="6">
+                </div>
+
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" class="form-control" name="phone" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Address</label>
+                    <textarea class="form-control" name="address" rows="2" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>City</label>
+                    <input type="text" class="form-control" name="city" required>
+                </div>
+
+                <!-- Donor Specific Fields -->
+                <div id="donorFields" style="display: none;">
+                    <h3 style="margin: 1.5rem 0 1rem;">Blood Donation Information</h3>
+                    <div class="form-group">
+                        <label>Blood Group</label>
+                        <select class="form-control" name="blood_group">
+                            <option value="">Select Blood Group</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Medical Conditions (if any)</label>
+                        <textarea class="form-control" name="medical_conditions" rows="2"></textarea>
+                    </div>
+
+                    <h3 style="margin: 1.5rem 0 1rem;">Organ Donation</h3>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="is_organ_donor" id="isOrganDonor"> I want to register as an organ donor
+                        </label>
+                    </div>
+
+                    <div id="organFields" style="display: none; margin-top: 1rem;">
+                        <label>Select organs to donate:</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="organs" value="kidney"> Kidney
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="organs" value="liver"> Liver
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="organs" value="heart"> Heart
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="organs" value="lungs"> Lungs
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="organs" value="cornea"> Cornea
+                            </label>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label>Medical History</label>
+                            <textarea class="form-control" name="medical_history" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recipient Specific Fields -->
+                <div id="recipientFields" style="display: none;">
+                    <h3 style="margin: 1.5rem 0 1rem;">Recipient Information</h3>
+                    <div class="form-group">
+                        <label>Required Blood Group</label>
+                        <select class="form-control" name="required_blood_group">
+                            <option value="">Select Blood Group</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Required Organ</label>
+                        <select class="form-control" name="required_organ">
+                            <option value="">Select Organ</option>
+                            <option value="kidney">Kidney</option>
+                            <option value="liver">Liver</option>
+                            <option value="heart">Heart</option>
+                            <option value="lungs">Lungs</option>
+                            <option value="cornea">Cornea</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Urgency Level</label>
+                        <select class="form-control" name="urgency_level">
+                            <option value="Low">Low</option>
+                            <option value="Medium" selected>Medium</option>
+                            <option value="High">High</option>
+                            <option value="Emergency">Emergency</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Medical Reports</label>
+                        <textarea class="form-control" name="medical_reports" rows="3" placeholder="Describe your medical condition and requirements"></textarea>
+                    </div>
+                </div>
+
+                <!-- Hospital Specific Fields -->
+                <div id="hospitalFields" style="display: none;">
+                    <h3 style="margin: 1.5rem 0 1rem;">Hospital Information</h3>
+                    <div class="form-group">
+                        <label>License Number</label>
+                        <input type="text" class="form-control" name="license_number">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Register</button>
+                </div>
+
+                <p style="text-align: center;">Already have an account? <a href="/login">Login here</a></p>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('userType').addEventListener('change', function() {
+    const donorFields = document.getElementById('donorFields');
+    const recipientFields = document.getElementById('recipientFields');
+    const hospitalFields = document.getElementById('hospitalFields');
+    
+    donorFields.style.display = 'none';
+    recipientFields.style.display = 'none';
+    hospitalFields.style.display = 'none';
+    
+    switch(this.value) {
+        case 'donor':
+            donorFields.style.display = 'block';
+            break;
+        case 'recipient':
+            recipientFields.style.display = 'block';
+            break;
+        case 'hospital':
+            hospitalFields.style.display = 'block';
+            break;
+    }
+});
+
+document.getElementById('isOrganDonor').addEventListener('change', function() {
+    document.getElementById('organFields').style.display = this.checked ? 'block' : 'none';
+});
+</script>
+</body>
+</html>

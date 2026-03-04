@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    
+</body>
+</html><div class="container" style="margin: 2rem auto;">
+    <!-- Emergency Banner for Donors -->
+    <div class="emergency-banner" id="emergencyDonorBanner">
+        <i class="fas fa-exclamation-triangle"></i> You are eligible to donate! Check emergency requests in your area.
+    </div>
+
+    <div class="row">
+        <!-- Profile Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Welcome, {{ user.full_name }}!</h3>
+                <span class="badge badge-success">Donor</span>
+            </div>
+            <div class="card-body">
+                <p><i class="fas fa-tint"></i> Blood Group: <strong>{{ donor.blood_group if donor else 'Not specified' }}</strong></p>
+                <p><i class="fas fa-calendar"></i> Last Donation: <strong>{{ donor.last_donation_date.strftime('%Y-%m-%d') if donor and donor.last_donation_date else 'Never' }}</strong></p>
+                <p><i class="fas fa-check-circle"></i> Eligibility Status: 
+                    <span class="badge {% if donor and donor.is_eligible %}badge-success{% else %}badge-warning{% endif %}">
+                        {{ 'Eligible' if donor and donor.is_eligible else 'Not Eligible' }}
+                    </span>
+                </p>
+                <p><i class="fas fa-heartbeat"></i> Total Donations: <strong>{{ donor.total_donations if donor else 0 }}</strong></p>
+            </div>
+        </div>
+
+        <!-- Organ Donation Status -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Organ Donation Status</h3>
+            </div>
+            <div class="card-body">
+                <p>Organs registered for donation:</p>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 1rem 0;">
+                    <span class="badge badge-success">Kidney</span>
+                    <span class="badge badge-success">Liver</span>
+                    <span class="badge badge-success">Heart</span>
+                    <span class="badge badge-success">Lungs</span>
+                    <span class="badge badge-success">Cornea</span>
+                </div>
+                <p>Consent Verified: 
+                    <span class="badge {% if organ_donor.consent_verified %}badge-success{% else %}badge-warning{% endif %}">
+                        {{ 'Yes' if organ_donor.consent_verified else 'Pending' }}
+                    </span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Donation History -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Donation History</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Details</th>
+                            <th>Hospital</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ donation.donation_date.strftime('%Y-%m-%d') if donation.donation_date else 'N/A' }}</td>
+                            <td>
+                                <span class="badge {% if donation.donation_type == 'blood' %}badge-danger{% else %}badge-success{% endif %}">
+                                    {{ donation.donation_type|upper if donation.donation_type else 'N/A' }}
+                                </span>
+                            </td>
+                            <td>
+                                    Blood Group: {{ donation.blood_group }}
+                              
+                                    Organ: {{ donation.organ_type }}
+
+                            </td>
+                            <td>City General Hospital</td>
+                            <td>
+                                <span class="badge {% if donation.status == 'Completed' %}badge-success{% elif donation.status == 'Pending' %}badge-warning{% else %}badge-danger{% endif %}">
+                                    {{ donation.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="5" style="text-align: center;">No donation history found</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Requests -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Emergency Requests Near You</h3>
+        </div>
+        <div class="card-body">
+            <div id="emergencyRequests">
+                <!-- Will be populated by JavaScript -->
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Notifications</h3>
+        </div>
+        <div class="card-body">
+            <div id="notificationsList">
+                <div class="alert alert-info" onclick="markAsRead('{{ notification._id }}')">
+                    {{ notification.message }}
+                    <small style="display: block; margin-top: 0.5rem;">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else '' }}</small>
+                </div>
+                <p>No new notifications</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function markAsRead(notificationId) {
+    fetch(`/notifications/read/${notificationId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+}
+
+// Load emergency requests
+fetch('/api/emergency-requests?city={{ user.city }}')
+    .then(response => response.json())
+    .then(data => {
+        const container = document.getElementById('emergencyRequests');
+        if (data.length > 0) {
+            let html = '';
+            data.forEach(req => {
+                html += `
+                    <div class="alert alert-danger">
+                        <strong>${req.blood_group || req.organ_type} needed at ${req.hospital}</strong>
+                        <p>${req.reason}</p>
+                        <button class="btn btn-primary btn-sm" onclick="respondToEmergency('${req.id}')">Respond</button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<p>No emergency requests in your area</p>';
+        }
+    });
+
+function respondToEmergency(emergencyId) {
+    alert('Thank you for responding! The hospital will contact you soon.');
+}
+</script>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    
+</body>
+</html>
+<div class="container" style="max-width: 400px; margin: 2rem auto;">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Login</h2>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="/login" id="loginForm">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" class="form-control" name="username" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" class="form-control" name="password" required>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+                </div>
+
+                <p style="text-align: center;">Don't have an account? <a href="/register">Register here</a></p>
+                <p style="text-align: center;"><a href="#">Forgot Password?</a></p>
+            </form>
+        </div>
+    </div>
+</div>
